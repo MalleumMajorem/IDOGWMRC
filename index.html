@@ -120,6 +120,7 @@
     <div class="checkbox-group">
         <label><input type="checkbox" id="reqTank" checked> Require Tank</label>
         <label><input type="checkbox" id="reqHeal" checked> Require Healer</label>
+        <label><input type="checkbox" id="reqUnique" checked> Require Unique Classes</label>
     </div>
 
     <button onclick="generateRoles()">Defy God's Will</button>
@@ -127,7 +128,6 @@
     <div id="output" style="margin-top: 20px;"></div>
 
     <script>
-        // Updated for Midnight Season 1
         const wowClasses = {
             "Death Knight": { Tank: ["Blood"], DPS: ["Frost", "Unholy"], Healer: [] },
             "Demon Hunter": { Tank: ["Vengeance"], DPS: ["Havoc", "Devourer"], Healer: [] },
@@ -154,82 +154,3 @@
                 randomIndex = Math.floor(Math.random() * currentIndex);
                 currentIndex--;
                 [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
-            }
-            return array;
-        }
-
-        function getRandomClassAndSpec(role) {
-            const validClasses = Object.keys(wowClasses).filter(cls => wowClasses[cls][role].length > 0);
-            const chosenClass = getRandomItem(validClasses);
-            const chosenSpec = getRandomItem(wowClasses[chosenClass][role]);
-            return { cls: chosenClass, spec: chosenSpec };
-        }
-
-        function generateRoles() {
-            const nameInputs = document.querySelectorAll('.player-input');
-            let names = [];
-            nameInputs.forEach(input => {
-                if (input.value.trim() !== '') {
-                    names.push(input.value.trim());
-                }
-            });
-
-            const reqTank = document.getElementById('reqTank').checked;
-            const reqHeal = document.getElementById('reqHeal').checked;
-            const output = document.getElementById('output');
-            
-            output.innerHTML = '';
-
-            if (names.length === 0) {
-                output.innerHTML = '<p class="error">Please enter at least one player name.</p>';
-                return;
-            }
-
-            let requiredRoles = [];
-            if (reqTank) requiredRoles.push('Tank');
-            if (reqHeal) requiredRoles.push('Healer');
-
-            let assignments = [];
-            names = shuffleArray(names);
-
-            // Logic: Less names entered than checked boxes
-            if (names.length < requiredRoles.length && names.length > 0) {
-                // Randomly pick ONE of the checked roles to assign
-                let randomlyPickedRole = getRandomItem(requiredRoles);
-                assignments.push({ name: names.pop(), role: randomlyPickedRole });
-                
-                // If there are remaining names (e.g., 2 names, but somehow fell into this block, fall back to DPS)
-                while(names.length > 0) {
-                    assignments.push({ name: names.pop(), role: 'DPS' });
-                }
-            } else {
-                // Logic: Force one name to each checked role (Max 1 Tank, Max 1 Heal)
-                if (reqTank && names.length > 0) {
-                    assignments.push({ name: names.pop(), role: 'Tank' });
-                }
-                if (reqHeal && names.length > 0) {
-                    assignments.push({ name: names.pop(), role: 'Healer' });
-                }
-                
-                // The rest are DPS
-                while (names.length > 0) {
-                    assignments.push({ name: names.pop(), role: 'DPS' });
-                }
-            }
-
-            // Generate HTML for each assigned player
-            assignments.forEach(assign => {
-                const build = getRandomClassAndSpec(assign.role);
-                const div = document.createElement('div');
-                div.className = 'result-card';
-                div.innerHTML = `
-                    <span class="player-name">${assign.name}</span>
-                    <span class="role">${assign.role}</span>
-                    <div class="spec">${build.spec} ${build.cls}</div>
-                `;
-                output.appendChild(div);
-            });
-        }
-    </script>
-</body>
-</html>
